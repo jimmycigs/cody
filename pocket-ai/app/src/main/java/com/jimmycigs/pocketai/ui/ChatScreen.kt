@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.jimmycigs.pocketai.ai.Brain
 import com.jimmycigs.pocketai.ai.Role
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,7 +72,7 @@ fun ChatScreen(
             TopAppBar(
                 title = {
                     Column {
-                        Text("Pocket AI")
+                        Text(Brain.ASSISTANT_NAME)
                         Text(
                             statusLine(state),
                             style = MaterialTheme.typography.labelSmall,
@@ -200,10 +201,10 @@ private fun Welcome(modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Text("Hi! I'm your offline AI.", style = MaterialTheme.typography.headlineSmall)
+        Text("Hello, ${Brain.USER_NAME}. I'm ${Brain.ASSISTANT_NAME}.", style = MaterialTheme.typography.headlineSmall)
         Spacer(Modifier.size(12.dp))
         Text(
-            "Everything stays on this phone. I learn only from you:\n\n" +
+            "I run offline and everything stays on this phone. I learn only from you:\n\n" +
                 "• \"Remember that my dog is called Rex\"\n" +
                 "• \"Forget about Rex\"\n" +
                 "• \"What do you know about me?\"\n\n" +

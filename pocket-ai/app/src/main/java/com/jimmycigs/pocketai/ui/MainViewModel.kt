@@ -55,7 +55,10 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         viewModelScope.launch {
-            withContext(Dispatchers.IO) { seedBaseKnowledge() }
+            withContext(Dispatchers.IO) {
+                seedBaseKnowledge()
+                migrateToThirdPerson()
+            }
             refresh()
             if (model.hasModelFile()) {
                 loadModel()
@@ -166,6 +169,11 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private suspend fun remember(fact: String) {
+        when (Brain.checkAgainstCore(fact)) {
+            Brain.CoreCheck.CONFIRMS -> return addMessage(Role.ASSISTANT, "I already know that. It never changes.")
+            Brain.CoreCheck.CONFLICTS -> return addMessage(Role.ASSISTANT, NAMES_NEVER_CHANGE)
+            Brain.CoreCheck.UNRELATED -> Unit
+        }
         if (Brain.isDuplicate(fact, _state.value.memories)) {
             addMessage(Role.ASSISTANT, "I already know that.")
         } else {
@@ -189,9 +197,9 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private suspend fun listMemories() {
         val learned = _state.value.memories.filter { it.source == Memory.SOURCE_CHAT }
         val reply = if (learned.isEmpty()) {
-            "You haven't taught me anything yet. Try \"Remember that …\" or just tell me about yourself."
+            "You haven't taught me anything yet, ${Brain.USER_NAME}. Try \"Remember that …\" or just tell me about yourself."
         } else {
-            "Here's what you've taught me:\n" + learned.reversed().joinToString("\n") { "• ${it.text}" }
+            "Here's what I know about you, ${Brain.USER_NAME}:\n" + learned.reversed().joinToString("\n") { "• ${it.text}" }
         }
         addMessage(Role.ASSISTANT, reply)
     }
@@ -205,14 +213,22 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun addMemory(text: String) {
-        val fact = Brain.cleanFact(text)
+        val fact = Brain.cleanFact(Brain.toThirdPerson(text))
         if (fact.isEmpty()) return
+        if (Brain.checkAgainstCore(fact) != Brain.CoreCheck.UNRELATED) {
+            _state.update { it.copy(notice = NAMES_NEVER_CHANGE) }
+            return
+        }
         viewModelScope.launch { saveMemory(fact) }
     }
 
     fun editMemory(id: Long, text: String) {
-        val fact = Brain.cleanFact(text)
+        val fact = Brain.cleanFact(Brain.toThirdPerson(text))
         if (fact.isEmpty()) return
+        if (Brain.checkAgainstCore(fact) != Brain.CoreCheck.UNRELATED) {
+            _state.update { it.copy(notice = NAMES_NEVER_CHANGE) }
+            return
+        }
         viewModelScope.launch {
             withContext(Dispatchers.IO) { store.updateMemory(id, fact) }
             refresh()
@@ -302,6 +318,22 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         prefs.edit().putBoolean(KEY_BASE_SEEDED, true).apply()
     }
 
+    /**
+     * One-time fix for memories saved before Bernard knew who was who: rewrites "my …" as "Master's …"
+     * and drops anything that tried to change Master's or Bernard's name.
+     */
+    private fun migrateToThirdPerson() {
+        if (prefs.getBoolean(KEY_THIRD_PERSON, false)) return
+        store.memories().forEach { memory ->
+            val text = Brain.cleanFact(Brain.toThirdPerson(memory.text.replace("Pocket AI", Brain.ASSISTANT_NAME)))
+            when {
+                Brain.checkAgainstCore(text) != Brain.CoreCheck.UNRELATED -> store.deleteMemory(memory.id)
+                text != memory.text -> store.updateMemory(memory.id, text)
+            }
+        }
+        prefs.edit().putBoolean(KEY_THIRD_PERSON, true).apply()
+    }
+
     override fun onCleared() {
         model.close()
         store.close()
@@ -310,5 +342,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private companion object {
         const val KEY_AUTO_LEARN = "auto_learn"
         const val KEY_BASE_SEEDED = "base_seeded_v1"
+        const val KEY_THIRD_PERSON = "third_person_v1"
+        const val NAMES_NEVER_CHANGE =
+            "That never changes: you are ${Brain.USER_NAME} and I am ${Brain.ASSISTANT_NAME}."
     }
 }

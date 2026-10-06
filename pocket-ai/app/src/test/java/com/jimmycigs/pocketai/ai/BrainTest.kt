@@ -14,11 +14,11 @@ class BrainTest {
     @Test
     fun parsesRememberCommands() {
         assertEquals(
-            Brain.Command.Remember("My dog is called Rex."),
+            Brain.Command.Remember("Master's dog is called Rex."),
             Brain.parseCommand("Remember that my dog is called Rex"),
         )
         assertEquals(
-            Brain.Command.Remember("I take my coffee black."),
+            Brain.Command.Remember("Master takes Master's coffee black."),
             Brain.parseCommand("please remember: I take my coffee black!"),
         )
         assertEquals(Brain.Command.Remember("Gym on Mondays."), Brain.parseCommand("note gym on Mondays."))
@@ -72,6 +72,7 @@ class BrainTest {
     fun cleanReplyStopsAtNextTurn() {
         assertEquals("Hello there!", Brain.cleanReply(" Assistant: Hello there!\nUser: hi again\nAssistant: ..."))
         assertEquals("Line one\nLine two", Brain.cleanReply("Line one\nLine two"))
+        assertEquals("Yes, Master.", Brain.cleanReply("Bernard: Yes, Master.\nMaster: thanks"))
     }
 
     @Test
@@ -82,8 +83,9 @@ class BrainTest {
             "What's my name?",
         )
         assertTrue(prompt.contains("- The user's name is Sam."))
-        assertTrue(prompt.contains("User: Hi\nAssistant: Hello!\nUser: What's my name?"))
-        assertTrue(prompt.endsWith("Assistant:"))
+        assertTrue(prompt.contains("Master: Hi\nBernard: Hello!\nMaster: What's my name?"))
+        assertTrue(prompt.contains("You are Bernard"))
+        assertTrue(prompt.endsWith("Bernard:"))
     }
 
     @Test
@@ -103,10 +105,35 @@ class BrainTest {
             Some extra chatter
         """.trimIndent()
         assertEquals(
-            listOf("The user's sister lives in Denver.", "The user likes hiking."),
+            listOf("Master's sister lives in Denver.", "Master likes hiking."),
             Brain.parseExtractedFacts(output),
         )
         assertTrue(Brain.parseExtractedFacts("NONE").isEmpty())
         assertTrue(Brain.parseExtractedFacts("- NONE").isEmpty())
+    }
+
+    @Test
+    fun rewritesFirstPersonAsMaster() {
+        assertEquals("Master's dog is Rex", Brain.toThirdPerson("my dog is Rex"))
+        assertEquals("Master lives in Ohio", Brain.toThirdPerson("I live in Ohio"))
+        assertEquals("Master is a carpenter", Brain.toThirdPerson("I'm a carpenter"))
+        assertEquals("Master has two kids", Brain.toThirdPerson("I have two kids"))
+        assertEquals("Master doesn't like onions", Brain.toThirdPerson("I don't like onions"))
+        assertEquals("Master watches football", Brain.toThirdPerson("i watch football"))
+        assertEquals("Master studies at night", Brain.toThirdPerson("I study at night"))
+        assertEquals("Bernard's job is to help Master", Brain.toThirdPerson("your job is to help me"))
+    }
+
+    @Test
+    fun namesNeverChange() {
+        val renameMe = (Brain.parseCommand("Remember that my name is John") as Brain.Command.Remember).fact
+        assertEquals("Master's name is John.", renameMe)
+        assertEquals(Brain.CoreCheck.CONFLICTS, Brain.checkAgainstCore(renameMe))
+        assertEquals(Brain.CoreCheck.CONFLICTS, Brain.checkAgainstCore(Brain.toThirdPerson("your name is Max")))
+        assertEquals(Brain.CoreCheck.CONFLICTS, Brain.checkAgainstCore(Brain.toThirdPerson("call me Jim")))
+        assertEquals(Brain.CoreCheck.CONFIRMS, Brain.checkAgainstCore(Brain.toThirdPerson("my name is Master")))
+        assertEquals(Brain.CoreCheck.UNRELATED, Brain.checkAgainstCore("Master's dog is called Rex."))
+        assertEquals(Brain.CoreCheck.UNRELATED, Brain.checkAgainstCore("Master's sister's name is Ana."))
+        assertTrue(Brain.parseExtractedFacts("- The user's name is John.\n- The user likes tea.").none { "John" in it })
     }
 }

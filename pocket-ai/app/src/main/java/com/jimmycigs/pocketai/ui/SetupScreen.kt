@@ -45,9 +45,9 @@ fun SetupScreen(
             .padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Text("Set up your offline AI", style = MaterialTheme.typography.headlineSmall)
+        Text("Set up Bernard", style = MaterialTheme.typography.headlineSmall)
         Text(
-            "Pocket AI needs a model file: the \"brain\" that runs on your phone. You only do this once. " +
+            "Bernard needs a model file: the \"brain\" that runs on your phone. You only do this once. " +
                 "After that, everything works with no internet at all.",
         )
         Text("1. Open the model page in your browser, sign in to Hugging Face and accept Google's Gemma license.")
@@ -82,7 +82,7 @@ fun SetupScreen(
         }
 
         Text(
-            "Tip: once installed, you can delete the downloaded file from Downloads; Pocket AI keeps its own copy.",
+            "Tip: once installed, you can delete the downloaded file from Downloads; Bernard keeps his own copy.",
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

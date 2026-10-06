@@ -1,6 +1,6 @@
-# Pocket AI
+# Pocket AI (Bernard)
 
-A private AI assistant for Android that runs entirely on your phone. It has no internet permission, and it learns new things only from talking to you.
+Bernard is a private AI assistant for Android that runs entirely on your phone. It has no internet permission, and it learns new things only from talking to you.
 
 ## How it works
 
@@ -11,6 +11,7 @@ A private AI assistant for Android that runs entirely on your phone. It has no i
   - `Forget about …` deletes the matching facts.
   - `What do you know about me?` lists what it has learned.
   - With "Learn while we chat" on, it also pulls facts out of statements you make about yourself.
+- **Who is who:** Bernard is the AI and Master is the user. This is built in and can't be changed or forgotten, and facts are stored in the third person ("Master's dog is Rex").
 - **Base knowledge:** edit `app/src/main/assets/base_knowledge.txt`. It's loaded once, the first time the app runs.
 - **Your control:** the "What I know" screen lets you add, edit, delete, back up and restore every memory.
 

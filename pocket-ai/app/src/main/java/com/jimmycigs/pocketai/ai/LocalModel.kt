@@ -106,7 +106,7 @@ class LocalModel(private val context: Context) {
                 }
             }
         require(!name.endsWith(".litertlm", ignoreCase = true)) {
-            "That's a .litertlm file. Pocket AI needs the .task version of the model."
+            "That's a .litertlm file. Bernard needs the .task version of the model."
         }
 
         val partial = File(context.filesDir, "model.task.part")
