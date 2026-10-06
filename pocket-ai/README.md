@@ -22,7 +22,7 @@ A private AI assistant for Android that runs entirely on your phone. It has no i
    download `gemma3-1b-it-int4.task` (about 550 MB) from
    https://huggingface.co/litert-community/Gemma3-1B-IT (this needs a free Hugging Face account and accepting Google's Gemma license), then pick the file in the app.
 
-You need a phone with about 6 GB of RAM or more.
+You need a phone with about 6 GB of RAM or more. Target phone: Pixel 8 Pro (12 GB, Android 16). The app tries the GPU first and falls back to the CPU. On Android 16, Play Protect may warn that the app is from an unknown developer: tap "More details" → "Install anyway".
 
 ## Build it yourself
 

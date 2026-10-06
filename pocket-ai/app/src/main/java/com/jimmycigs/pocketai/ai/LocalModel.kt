@@ -32,13 +32,23 @@ class LocalModel(private val context: Context) {
     suspend fun load() = withContext(Dispatchers.IO) {
         lock.withLock {
             if (engine == null) {
-                val options = LlmInference.LlmInferenceOptions.builder()
-                    .setModelPath(modelFile.absolutePath)
-                    .setMaxTokens(MAX_TOKENS)
-                    .build()
-                engine = LlmInference.createFromOptions(context, options)
+                // The GPU is much faster on recent phones; fall back to the CPU if it isn't supported.
+                engine = try {
+                    create(LlmInference.Backend.GPU)
+                } catch (e: Exception) {
+                    create(LlmInference.Backend.CPU)
+                }
             }
         }
+    }
+
+    private fun create(backend: LlmInference.Backend): LlmInference {
+        val options = LlmInference.LlmInferenceOptions.builder()
+            .setModelPath(modelFile.absolutePath)
+            .setMaxTokens(MAX_TOKENS)
+            .setPreferredBackend(backend)
+            .build()
+        return LlmInference.createFromOptions(context, options)
     }
 
     /** Runs one prompt in a fresh session, reporting the growing reply through [onPartial]. */
