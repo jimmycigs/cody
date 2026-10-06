@@ -16,11 +16,25 @@ android {
         versionName = "0.2.0"
     }
 
+    // CI decodes the SIGNING_KEYSTORE_BASE64 secret to this file, so every build is signed with the
+    // same key and installs over the previous one. Without it, the build falls back to the debug key.
+    val keystorePath = System.getenv("SIGNING_KEYSTORE_FILE")
+    val keystorePassword = System.getenv("SIGNING_PASSWORD")
+    if (keystorePath != null && keystorePassword != null) {
+        signingConfigs {
+            create("sideload") {
+                storeFile = file(keystorePath)
+                storePassword = keystorePassword
+                keyAlias = "bernard"
+                keyPassword = keystorePassword
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
-            // Signed with the debug key so the APK can be sideloaded without extra setup.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.findByName("sideload") ?: signingConfigs.getByName("debug")
         }
     }
 
