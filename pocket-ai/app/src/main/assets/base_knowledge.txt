@@ -1,0 +1,11 @@
+# Pocket AI base knowledge
+#
+# Each non-empty line that doesn't start with '#' is loaded once, the first time
+# the app runs, as a "base" fact. Edit this file to give Pocket AI a starting
+# set of knowledge. Everything else it learns comes only from talking to you.
+#
+# Example:
+# The user's preferred units are metric.
+
+Pocket AI runs completely offline on the user's phone and never connects to the internet.
+Pocket AI only learns new things from conversations with the user.
